@@ -28,6 +28,10 @@ as_html.COMMENT <- function(x, ...) {
   paste0("<!-- ", flatten_text(x), " -->")
 }
 
+# USERMACRO appears first, followed by the rendered macro
+#' @export
+as_html.USERMACRO <-  function(x, ...) ""
+
 # If it's a character vector, we've got to the leaves of the tree
 #' @export
 as_html.character <- function(x, ..., escape = TRUE) {
@@ -154,10 +158,15 @@ method_usage <- function(x, type) {
 
 #' @export
 as_html.tag_Sexpr <- function(x, ...) {
+  # Currently assume output is always Rd
+  options <- attr(x, "Rd_option")
+
   code <- flatten_text(x, escape = FALSE)
+  # Not sure if this is the correct environment
   expr <- eval(parse(text = code)[[1]], new.env(parent = globalenv()))
 
-  flatten_text(rd_text(as.character(expr)), ...)
+  rd <- rd_text(as.character(expr))
+  as_html(rd, ...)
 }
 
 #' @export
@@ -353,8 +362,6 @@ as_html.tag_testonly <- function(x, ...) ""
 as_html.tag_concept <-  function(x, ...) ""
 #' @export
 as_html.tag_out <-      function(x, ...) ""
-#' @export
-as_html.tag_donttest <- function(x, ...) ""
 #' @export
 as_html.tag_tab <-      function(x, ...) ""
 #' @export

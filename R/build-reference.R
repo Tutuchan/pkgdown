@@ -41,13 +41,37 @@
 #' retina display). Icons are matched to topics by aliases.
 #'
 #' @inheritParams build_articles
+#' @param lazy If \code{TRUE}, only rebuild pages where the \code{.Rd}
+#'   is more recent than the \code{.html}. This makes it much easier to
+#'   rapidly protoype. It is set to \code{FALSE} by \code{\link{build_site}}.
 #' @param run_dont_run Run examples that are surrounded in \\dontrun?
 #' @param examples Run examples?
 #' @param mathjax Use mathjax to render math symbols?
 #' @param seed Seed used to initialize so that random examples are
 #'   reproducible.
 #' @export
+#' @examples
+#' # This example illustrates some important output types
+#' # The following output should be wrapped over multiple lines
+#' a <- 1:100
+#' a
+#'
+#' cat("This some text!\n")
+#' message("This is a message!")
+#' warning("This is a warning!")
+#'
+#' \dontrun{
+#' stop("This is an error!", call. = FALSE)
+#' }
+#'
+#' \donttest{
+#' # This code won't generally be run by CRAN. But it
+#' # will be run by testthat.
+#' b <- 10
+#' a + b
+#' }
 build_reference <- function(pkg = ".",
+                            lazy = TRUE,
                             examples = TRUE,
                             run_dont_run = FALSE,
                             mathjax = TRUE,
@@ -72,6 +96,7 @@ build_reference <- function(pkg = ".",
     purrr::transpose() %>%
     purrr::map(build_reference_topic, path,
       pkg = pkg,
+      lazy = lazy,
       depth = depth,
       examples = examples,
       run_dont_run = run_dont_run,
@@ -107,12 +132,20 @@ build_reference_index <- function(pkg = ".", path = "docs/reference", depth = 1L
 
 build_reference_topic <- function(topic,
                                   pkg,
+                                  lazy = TRUE,
                                   examples = TRUE,
                                   run_dont_run = FALSE,
                                   mathjax = TRUE,
                                   path = NULL,
                                   depth = 1L
                                   ) {
+
+  in_path <- file.path(pkg$path, "man", topic$file_in)
+  out_path <- out_path(path, topic$file_out)
+
+  if (lazy && !out_of_date(in_path, out_path))
+    return(invisible())
+
   render_page(
     pkg, "reference-topic",
     data = data_reference_topic(
@@ -123,7 +156,7 @@ build_reference_topic <- function(topic,
       run_dont_run = run_dont_run,
       mathjax = mathjax
     ),
-    path = out_path(path, topic$file_out),
+    path = out_path,
     depth = depth
   )
   invisible()
