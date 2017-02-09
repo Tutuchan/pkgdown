@@ -3,7 +3,7 @@
 NULL
 
 inst_path <- function() {
-  if (is.null(devtools::dev_meta("pkgdown"))) {
+  if (is.null(pkgload::dev_meta("pkgdown"))) {
     # pkgdown is probably installed
     system.file(package = "pkgdown")
   } else {
@@ -92,6 +92,14 @@ tweak_anchors <- function(html, only_contents = TRUE) {
       .where = "before"
     )
   }
+  invisible()
+}
+
+tweak_tables <- function(html) {
+  # Ensure all tables have class="table"
+  table <- xml2::xml_find_all(html, ".//table")
+  xml2::xml_attr(table, "class") <- "table"
+
   invisible()
 }
 
